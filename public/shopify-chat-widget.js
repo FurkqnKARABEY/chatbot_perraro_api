@@ -65,7 +65,7 @@ class PerraroChatWidget {
         },
         body: JSON.stringify({
           messages: [{ role: 'user', content: message }],
-          assistantId: 'asst_your_assistant_id_here' // GPTs ID'niz
+          assistantId: 'asst_3xXmxBPDkSJ028i06zdKzrGV' // GPTs ID'niz
         }),
       });
 
