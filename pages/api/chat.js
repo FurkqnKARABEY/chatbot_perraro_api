@@ -1,52 +1,50 @@
+// pages/api/chat.js
 import OpenAI from 'openai';
 
-const openai = new OpenAI(process.env.OPENAI_API_KEY);
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' });
+    return res.status(405).json({ error: 'Only POST requests allowed' });
   }
 
+  const { messages, assistantId, pdfContent } = req.body;
+
   try {
-    const { messages, assistantId } = req.body;
-    
     const thread = await openai.beta.threads.create({
-      messages: messages.map(msg => ({
-        role: msg.role,
-        content: msg.content
-      }))
+      messages: [
+        { role: 'system', content: pdfContent || '' },
+        ...messages.map((msg) => ({
+          role: msg.role,
+          content: msg.content,
+        })),
+      ],
     });
 
-    const run = await openai.beta.threads.runs.create(
-      thread.id,
-      {
-        assistant_id: assistantId || 'asst_3xXmxBPDkSJ028i06zdKzrGV' // GPTs ID'niz
-      }
-    );
+    const run = await openai.beta.threads.runs.create(thread.id, {
+      assistant_id: assistantId,
+    });
 
-    let runStatus = await openai.beta.threads.runs.retrieve(
-      thread.id,
-      run.id
-    );
+    // Bekle, cevabı al
+    let status = 'queued';
+    let response;
 
-    // Polling for completion
-    while (runStatus.status !== 'completed') {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      runStatus = await openai.beta.threads.runs.retrieve(
-        thread.id,
-        run.id
-      );
+    while (status !== 'completed') {
+      await new Promise((r) => setTimeout(r, 1000));
+      const runStatus = await openai.beta.threads.runs.retrieve(thread.id, run.id);
+      status = runStatus.status;
     }
 
-    const threadMessages = await openai.beta.threads.messages.list(
-      thread.id
-    );
+    const messagesResp = await openai.beta.threads.messages.list(thread.id);
+    const lastMessage = messagesResp.data[0];
 
-    const response = threadMessages.data[0].content[0].text.value;
+    response = lastMessage.content[0].text.value;
 
     res.status(200).json({ response });
   } catch (error) {
-    console.error('OpenAI API error:', error);
-    res.status(500).json({ error: 'Error processing your request' });
+    console.error(error);
+    res.status(500).json({ error: 'Failed to get AI response' });
   }
 }
