@@ -10,6 +10,10 @@
     {
       "src": "/api/chat",
       "dest": "pages/api/chat.js"
+    },
+    {
+      "src": "/api/upload-pdf",
+      "dest": "pages/api/upload-pdf.js"
     }
   ]
 }
