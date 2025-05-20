@@ -20,7 +20,7 @@ export default async function handler(req, res) {
     const run = await openai.beta.threads.runs.create(
       thread.id,
       {
-        assistant_id: assistantId || 'asst_your_assistant_id_here' // GPTs ID'niz
+        assistant_id: assistantId || 'asst_3xXmxBPDkSJ028i06zdKzrGV' // GPTs ID'niz
       }
     );
 
